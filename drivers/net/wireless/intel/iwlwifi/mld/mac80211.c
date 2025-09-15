@@ -23,6 +23,7 @@
 #include "roc.h"
 #include "mlo.h"
 #include "stats.h"
+#include "iwl-nvm-parse.h"
 #include "ftm-initiator.h"
 #include "low_latency.h"
 #include "fw/api/scan.h"
@@ -2975,19 +2976,23 @@ static int iwl_mld_mac_get_survey(struct ieee80211_hw *hw, int idx,
 	return 0;
 }
 
-static int iwl_mld_op_get_antenna(struct ieee80211_hw *hw, int radio_idx, u32 *tx_ant, u32 *rx_ant)
+static int iwl_mld_get_antenna(struct ieee80211_hw *hw, int radio_idx,
+			       u32 *tx_ant, u32 *rx_ant)
 {
 	struct iwl_mld *mld = IWL_MAC80211_GET_MLD(hw);
+
 	*tx_ant = iwl_mld_get_valid_tx_ant(mld);
 	*rx_ant = iwl_mld_get_valid_rx_ant(mld);
+
 	return 0;
 }
 
-static int iwl_mld_op_set_antenna(struct ieee80211_hw *hw, int radio_idx, u32 tx_ant, u32 rx_ant)
+static int iwl_mld_set_antenna(struct ieee80211_hw *hw, int radio_idx,
+			       u32 tx_ant, u32 rx_ant)
 {
 	struct iwl_mld *mld = IWL_MAC80211_GET_MLD(hw);
 
-	if (!mld->nvm_data)
+	if (WARN_ON(!mld->nvm_data))
 		return -EBUSY;
 
 	/* mac80211 ensures the device is not started,
@@ -3008,6 +3013,8 @@ const struct ieee80211_ops iwl_mld_hw_ops = {
 	.stop = iwl_mld_mac80211_stop,
 	.config = iwl_mld_mac80211_config,
 	.force_cleanup = iwl_mld_mac80211_force_cleanup,
+	.get_antenna = iwl_mld_get_antenna,
+	.set_antenna = iwl_mld_set_antenna,
 	.add_interface = iwl_mld_mac80211_add_interface,
 	.remove_interface = iwl_mld_mac80211_remove_interface,
 	.conf_tx = iwl_mld_mac80211_conf_tx,
@@ -3037,8 +3044,6 @@ const struct ieee80211_ops iwl_mld_hw_ops = {
 	.flush = iwl_mld_mac80211_flush,
 	.flush_sta = iwl_mld_mac80211_flush_sta,
 	.ampdu_action = iwl_mld_mac80211_ampdu_action,
-	.get_antenna = iwl_mld_op_get_antenna,
-	.set_antenna = iwl_mld_op_set_antenna,
 	.get_et_sset_count = iwl_mld_get_et_sset_count,
 	.get_et_stats = iwl_mld_get_et_stats,
 	.get_et_strings = iwl_mld_get_et_strings,
