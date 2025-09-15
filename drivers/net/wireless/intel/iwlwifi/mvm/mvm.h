@@ -3024,4 +3024,9 @@ static inline int iwl_mvm_sum_sigs_2(int a, int b)
 
 void iwl_mvm_mld_select_links(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
 			      bool valid_links_changed);
+
+/* rate_n_flags conversion */
+u32 iwl_mvm_v3_rate_from_fw(__le32 rate, u8 rate_ver);
+__le32 iwl_mvm_v3_rate_to_fw(u32 rate, u8 rate_ver);
+
 #endif /* __IWL_MVM_H__ */
