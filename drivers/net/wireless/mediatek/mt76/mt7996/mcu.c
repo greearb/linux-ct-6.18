@@ -1387,7 +1387,6 @@ mt7996_mcu_bss_basic_tlv(struct mt7996_dev *dev,
 	struct mt76_connac_bss_basic_tlv *bss;
 	u32 type = CONNECTION_INFRA_AP;
 	u16 sta_wlan_idx = wlan_idx;
-	struct ieee80211_sta *sta;
 	struct tlv *tlv;
 	int idx;
 
@@ -1398,17 +1397,21 @@ mt7996_mcu_bss_basic_tlv(struct mt7996_dev *dev,
 		break;
 	case NL80211_IFTYPE_STATION:
 		if (enable) {
+			struct ieee80211_sta *sta;
+
 			rcu_read_lock();
-			sta = ieee80211_find_sta(vif, vif->bss_conf.bssid);
+			sta = ieee80211_find_sta(vif, link_conf->bssid);
 			mt76_dbg(&dev->mt76, MT76_DBG_BSS,
 				 "%s: wlan_idx: %d find_sta returned: %p  link_conf->bssid: %pM\n",
 				 __func__, wlan_idx, sta, link_conf->bssid);
-			/* TODO: enable BSS_INFO_UAPSD & BSS_INFO_PM */
 			if (sta) {
-				struct mt76_wcid *wcid;
+				struct mt7996_sta *msta = (void *)sta->drv_priv;
+				struct mt7996_sta_link *msta_link;
+				int link_id = link_conf->link_id;
 
-				wcid = (struct mt76_wcid *)sta->drv_priv;
-				sta_wlan_idx = wcid->idx;
+				msta_link = rcu_dereference(msta->link[link_id]);
+				if (msta_link)
+					sta_wlan_idx = msta_link->wcid.idx;
 			}
 			rcu_read_unlock();
 		}
@@ -1425,8 +1428,6 @@ mt7996_mcu_bss_basic_tlv(struct mt7996_dev *dev,
 	tlv = mt7996_mcu_add_uni_tlv(skb, UNI_BSS_INFO_BASIC, sizeof(*bss));
 
 	bss = (struct mt76_connac_bss_basic_tlv *)tlv;
-	bss->bcn_interval = cpu_to_le16(link_conf->beacon_int);
-	bss->dtim_period = link_conf->dtim_period;
 	bss->bmc_tx_wlan_idx = cpu_to_le16(wlan_idx);
 	bss->sta_idx = cpu_to_le16(sta_wlan_idx);
 	bss->conn_type = cpu_to_le32(type);
@@ -1463,10 +1464,10 @@ mt7996_mcu_bss_basic_tlv(struct mt7996_dev *dev,
 		 bss->wmm_idx, bss->bssid, link_conf->link_id, enable, sta_wlan_idx);
 
 	bss->bcn_interval = cpu_to_le16(link_conf->beacon_int);
-	bss->dtim_period = vif->bss_conf.dtim_period;
+	bss->dtim_period = link_conf->dtim_period;
 	bss->phymode = mt76_connac_get_phy_mode(phy, vif,
 						chandef->chan->band, NULL);
-	bss->phymode_ext = mt76_connac_get_phy_mode_ext(phy, &vif->bss_conf,
+	bss->phymode_ext = mt76_connac_get_phy_mode_ext(phy, link_conf,
 							chandef->chan->band);
 
 	return 0;
