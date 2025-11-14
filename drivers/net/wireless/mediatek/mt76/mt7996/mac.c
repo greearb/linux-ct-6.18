@@ -2975,6 +2975,8 @@ mt7996_mac_full_reset(struct mt7996_dev *dev)
 		cancel_delayed_work_sync(&phy->mt76->mac_work);
 	cancel_delayed_work_sync(&dev->scs_work);
 
+	mt76_abort_scan(&dev->mt76);
+
 	mutex_lock(&dev->mt76.mutex);
 	for (i = 0; i < 10; i++) {
 		if (!mt7996_mac_restart(dev))
