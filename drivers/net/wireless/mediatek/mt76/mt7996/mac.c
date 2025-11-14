@@ -2975,7 +2975,7 @@ mt7996_mac_full_reset(struct mt7996_dev *dev)
 		cancel_delayed_work_sync(&phy->mt76->mac_work);
 	cancel_delayed_work_sync(&dev->scs_work);
 
-	mt76_abort_scan(&dev->mt76);
+	mt76_abort_scan_mtx(&dev->mt76);
 
 	mutex_lock(&dev->mt76.mutex);
 	for (i = 0; i < 10; i++) {
@@ -3068,7 +3068,7 @@ void mt7996_mac_reset_work(struct work_struct *work)
 
 	set_bit(MT76_RESET, &dev->mphy.state);
 	set_bit(MT76_MCU_RESET, &dev->mphy.state);
-	mt76_abort_scan(&dev->mt76);
+	mt76_abort_scan_mtx(&dev->mt76);
 	wake_up(&dev->mt76.mcu.wait);
 
 	cancel_work_sync(&dev->wed_rro.work);

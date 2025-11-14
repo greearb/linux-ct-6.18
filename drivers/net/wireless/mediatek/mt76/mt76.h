@@ -1979,6 +1979,17 @@ int mt76_set_channel(struct mt76_phy *phy, struct cfg80211_chan_def *chandef,
 		     bool offchannel);
 void mt76_scan_work(struct work_struct *work);
 void mt76_abort_scan(struct mt76_dev *dev);
+static inline void
+mt76_abort_scan_mtx(struct mt76_dev *dev)
+{
+	struct mt76_phy *phy = dev->scan.phy;
+	struct ieee80211_hw *hw = phy->hw;
+
+	wiphy_lock(hw->wiphy);
+	mt76_abort_scan(dev);
+	wiphy_unlock(hw->wiphy);
+}
+
 void mt76_roc_complete_work(struct work_struct *work);
 void mt76_roc_complete(struct mt76_phy *phy);
 void mt76_abort_roc(struct mt76_phy *phy);
