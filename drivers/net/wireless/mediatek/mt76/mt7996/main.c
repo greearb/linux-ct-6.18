@@ -589,7 +589,8 @@ void mt7996_vif_link_remove(struct mt76_phy *mphy, struct ieee80211_vif *vif,
 	};
 	int idx = msta_link->wcid.idx;
 
-	ieee80211_iter_keys(mphy->hw, vif, mt7996_key_iter, &it);
+	if (!mlink->wcid->offchannel)
+		ieee80211_iter_keys(mphy->hw, vif, mt7996_key_iter, &it);
 
 	mt76_dbg(&dev->mt76, MT76_DBG_BSS,
 		 "%s: band=%u, bss_idx=%u, link_id=%u, wcid=%u hw: %px\n",
