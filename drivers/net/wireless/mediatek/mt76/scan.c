@@ -95,10 +95,17 @@ void mt76_scan_work(struct work_struct *work)
 	struct cfg80211_scan_request *req = dev->scan.req;
 	struct cfg80211_chan_def chandef = {};
 	struct mt76_phy *phy = dev->scan.phy;
-	struct ieee80211_hw *hw = phy->hw;
+	struct ieee80211_hw *hw;
 	int duration = HZ / 9; /* ~110 ms */
 	int i;
 
+	if (WARN_ON_ONCE(!phy)) {
+		mt76_dbg(dev, MT76_DBG_CHAN, "%s: phy is null, return and hope.\n",
+			 __func__);
+		return;
+	}
+
+	hw = phy->hw;
 	wiphy_lock(hw->wiphy);
 
 	if (dev->scan.chan_idx >= req->n_channels) {
